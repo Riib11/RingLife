@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <canvas id="canvas"></canvas>
+</body>
+
+<head>
+    <title>Ring Life</title>
+    <style type="text/css">
+        canvas {
+            background-color: #000000;
+        }
+    </style>
+    <script type="text/javascript">
+        var canvas_width = 800
+        var canvas_height = 800
+
+        var c = document.getElementById("canvas")
+        c.width = canvas_width
+        c.height = canvas_height
+        var ctx = c.getContext("2d");
+        ctx.fillStyle = "#000000";
+
+        function setFill(v) {
+            if(v == null) {
+                ctx.fillStyle = "#888888"
+            } else {
+
+                if(v) {
+                    ctx.fillStyle = "#FFFFFF"
+                } else {
+                    ctx.fillStyle = "#000000"
+                }
+
+                // v = Math.floor(v*15)
+                // var vs;
+                // if(v < 10) {
+                //     vs = String(v)
+                // } else {
+                //     if(v == 10) { vs = "a" }
+                //     if(v == 11) { vs = "b" }
+                //     if(v == 12) { vs = "c" }
+                //     if(v == 13) { vs = "d" }
+                //     if(v == 14) { vs = "e" }
+                //     if(v == 15) { vs = "f" }
+                // }
+                // var res = "#"+vs+vs+vs+vs+vs+vs
+                // ctx.fillStyle = res
+            }
+        }
+
+        function line(x1,y1,x2,y2) {
+            ctx.moveTo(x1,y1)
+            ctx.lineTo(x2,y2)
+            ctx.stroke()
+        }
+
+        var w = 20
+        var h = 20
+        var r = 380
+        function rect(x,y) {
+            // console.log(String(Math.floor(x)) + ":" + String(Math.floor(y)))
+            ctx.fillRect(Math.floor(x-w/2),Math.floor(y-h/2),w,h)
+        }
+
+        function clear() {
+            ctx.clearRect(0,0,canvas_width,canvas_height)
+        }
+
+        function Ring(size,rule,start,steps,delay) {
+            // all entries are binary
+            var content = []
+
+            function get(i) {
+                if(i < 0) {
+                    i = size+i
+                } else if(i > size) {
+                    i = i-size
+                }
+                return content[i]
+            }
+
+            // setup
+            for(var i in start) {
+                content.push(start[i])
+            }
+            for(var i = 0; i < size-start.length; i++) {
+                content.push(null)
+            }
+
+            // drawing
+            function updateDraw() {
+                clear()
+
+                prevs = []
+                var p = 0
+
+                var x;
+                var y;
+                var toTheta = 2 * Math.PI / size
+                for(var i in content) {
+
+                    setFill(content[i])
+
+                    // console.log(Math.floor(String(i)) + ":" + String(Math.cos(i * toTheta)))
+                    x = Math.floor(r * Math.cos(i * toTheta) + canvas_width/2)
+                    y = Math.floor(r * Math.sin(i * toTheta) + canvas_height/2)
+                    rect(x,y)
+                }
+            }
+
+            var last_index;
+
+            // running
+            function run(index, steps_left) {
+                if(steps_left >= 0) {
+                    last_index = index
+                    updateDraw()
+
+                    if(index == this.size) {
+                        index = 0
+                    }
+
+                    input = []
+                    for(var i in start) {
+                        input.push(get(index-(start.length-i)))
+                    }
+
+                    content[index] = rule(input)
+                    console.log(content[index])
+                    // console.log(index)
+                    setTimeout(function() {
+                        run(index+1, steps_left-1), 
+                        delay
+                    })
+                }
+            }
+
+            run(start.length,steps)
+
+            console.log(get(last_index))
+        }
+
+        var size = 100
+        var rule = function(x) { return x[0] + x[1] + x[2] + x[3] }
+        var steps = 20
+        var delay = 1
+
+        var result = Ring(size,rule,start,steps)
+
+    </script>
+</head>
+
+</html>

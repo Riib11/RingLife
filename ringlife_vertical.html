@@ -1,0 +1,226 @@
+
+    <canvas id="canvas"></canvas>
+</body>
+
+<head>
+    <title>Ring Life 2</title>
+    <style type="text/css">
+        canvas {
+            background-color: #FFFFFF;
+            margin: 0px;
+        }
+    </style>
+    <script type="text/javascript">
+
+        var size = 1000
+        var steps = 1000
+        var delay = 1
+
+        rules_array = []
+        function arranges(size,array) {
+            if(array.length == size) {
+                rules_array.push(array)
+            } else {
+                arranges(size,array.concat(0))
+                arranges(size,array.concat(1))
+            }
+        }
+
+        function setupCanvases() {
+            var list = document.createElement("OL")
+            var tmp_li;
+            var tmp_p;
+            var tmp_canvas;
+            for(var i = 0; i < 2**8; i++) {
+                tmp_li = document.createElement("LI")
+                // tmp_p = document.createElement("P")
+                // tmp_p.innerHTML = String(rules_array[i])
+                tmp_canvas = document.createElement("CANVAS")
+                tmp_canvas.id = "canvas_" + String(i)
+
+                // tmp_li.appendChild(tmp_p)
+                tmp_li.appendChild(tmp_canvas)
+                list.appendChild(tmp_li)
+            }
+            document.body.appendChild(list)
+        }
+
+        function createRing(index) {
+            var c = document.getElementById("canvas_" + String(index))
+            var ctx = c.getContext("2d");
+            ctx.fillStyle = "#000000";
+
+            function setFill(v) {
+                if(v == null) {
+                    ctx.fillStyle = "#888888"
+                } else {
+
+                    if(v) {
+                        ctx.fillStyle = "#FFFFFF"
+                    } else {
+                        ctx.fillStyle = "#000000"
+                    }
+                }
+            }
+
+            function line(x1,y1,x2,y2) {
+                ctx.moveTo(x1,y1)
+                ctx.lineTo(x2,y2)
+                ctx.stroke()
+            }
+
+            var w = 5
+            var h = 5
+            var r = 380
+            function rect(x,y) {
+                // console.log(String(Math.floor(x)) + ":" + String(Math.floor(y)))
+                ctx.fillRect(Math.floor(x-w/2),Math.floor(y-h/2),w,h)
+            }
+
+            function clear() {
+                ctx.clearRect(0,0,c.width,c.height)
+            }
+
+            function randInt(min, max) {
+                min = Math.ceil(min);
+                max = Math.floor(max);
+                return Math.floor(Math.random() * (max - min)) + min;
+            }
+
+            function Ring(size,rules,steps,delay) {
+                // make sure canvas is big enough
+                c.width = w * size
+                c.height = w * steps
+
+                // all entries are binary
+                var content = []
+
+                function get(i) {
+                    if(i < 0) {
+                        i = size+i
+                    } else if(i >= size) {
+                        i = i-size
+                    }
+                    return content[i]
+                }
+
+                for(var i = 0; i < size; i++) {
+                    content.push(randInt(0,2))
+                }
+
+                var draw_level = 0
+
+                // drawing
+                function updateDraw() {
+                    // clear()
+
+                    var x;
+                    var y;
+                    var toTheta = 2 * Math.PI / size
+                    for(var i in content) {
+
+                        setFill(content[i])
+
+                        x = i * w
+                        y = draw_level * h
+                        rect(x,y)
+                    }
+
+                    draw_level++
+                }
+
+                // running
+                function run(steps_left) {
+                    if(steps_left >= 0) {
+                        updateDraw()
+
+                        var new_content = []
+
+                        // update all
+                        for(var i = 0; i < size; i++) {
+                            var l = get(i-1)
+                            var m = get(i)
+                            var r = get(i+1)
+
+                            /* rules:
+                                [0]: 000
+                                [1]: 100
+                                [2]: 010
+                                [3]: 001
+                                [4]: 110
+                                [5]: 011
+                                [6]: 101
+                                [7]: 111
+                            */
+
+                            var n = null
+
+                            // 000
+                            if( !l && !m && !r ) {
+                                n = rules[0]
+                            // 100
+                            } else if( l && !m && !r ) {
+                                n = rules[1]
+                            // 010
+                            } else if( !l && m && !r ) {
+                                n = rules[2]
+                            // 001
+                            } else if( !l && !m && r ) {
+                                n = rules[3]
+                            // 110
+                            } else if( l && m && !r ) {
+                                n = rules[4]
+                            // 011
+                            } else if( !l && m && r ) {
+                                n = rules[5]
+                            // 101
+                            } else if( l && !m && r ) {
+                                n = rules[6]
+                            // 111
+                            } else if( l && m && r ) {
+                                n = rules[7]
+                            }
+
+                            new_content.push(n)
+
+                        }
+
+                        content = new_content
+
+
+                        setTimeout(function() {
+                            run(steps_left-1), 
+                            delay
+                        })
+                    }
+                }
+                
+                run(steps)
+
+            }
+
+            /* rules:
+                [0]: 000
+                [1]: 100
+                [2]: 010
+                [3]: 001
+                [4]: 110
+                [5]: 011
+                [6]: 101
+                [7]: 111 */
+
+            var rules = rules_array[index]
+            var result = Ring(size,rules,steps,delay)
+        }
+
+        arranges(8,[])
+        setupCanvases()
+        // for(var i = 0; i < 2**8; i++) {
+        //     createRing(i)
+        // }
+        createRing(142)
+
+    </script>
+</head>
+
+</html>
